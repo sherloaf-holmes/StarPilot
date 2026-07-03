@@ -415,16 +415,6 @@ def _capture_watchdog_debug_dump(name: str, pid: int, reason: str, dt: float) ->
 
 def launcher(proc: str, name: str, nice: int | None = None) -> None:
   try:
-    # Cap glibc malloc arenas for this worker. MALLOC_ARENA_MAX (set in launch_env.sh)
-    # is not reliably inherited by multiprocessing workers on Python 3.14 (forkserver/
-    # spawn default), so set it explicitly here. Bounds per-process RSS bloat with no
-    # perf cost for these mostly single-threaded daemons. M_ARENA_MAX == -8.
-    try:
-      import ctypes
-      ctypes.CDLL("libc.so.6").mallopt(-8, 2)
-    except Exception:
-      pass
-
     if nice is not None:
       os.nice(nice)
 
