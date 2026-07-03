@@ -50,7 +50,10 @@ class ModelState:
       for key, value in self.warp_numpy_inputs.items()
     }
     self.frame_size = get_nv12_info(cam_w, cam_h)[3]
-    self._blob_cache: dict[int, Tensor] = {}
+    # Keyed by VisionIPC buffer index (bounded by buffer_len) rather than the raw
+    # data pointer: the driver-cam pointer is not stable per buffer, so a ptr key
+    # grows the dict every frame and leaks ~1MB/min. Rebuild only if a slot's ptr changes.
+    self._blob_cache: dict[int, tuple[int, Tensor]] = {}
     self.model_run = pickle.loads(read_file_chunked(str(MODEL_PKL_PATH)))
     with open(MODELS_DIR / f"dm_warp_{cam_w}x{cam_h}_tinygrad.pkl", "rb") as warp_file:
       self.image_warp = pickle.load(warp_file)
@@ -60,14 +63,16 @@ class ModelState:
     start = time.perf_counter()
 
     ptr = np.frombuffer(buf.data, dtype=np.uint8).ctypes.data
-    if ptr not in self._blob_cache:
-      self._blob_cache[ptr] = Tensor.from_blob(
+    cached = self._blob_cache.get(buf.idx)
+    if cached is None or cached[0] != ptr:
+      cached = (ptr, Tensor.from_blob(
         ptr, (self.frame_size,), dtype="uint8", device=self.device,
-      )
+      ))
+      self._blob_cache[buf.idx] = cached
 
     self.warp_numpy_inputs["transform"][:] = transform
     self.tensor_inputs["input_img"] = self.image_warp(
-      self._blob_cache[ptr], self.warp_inputs["transform"],
+      cached[1], self.warp_inputs["transform"],
     )
     output = self.model_run(**self.tensor_inputs).numpy().flatten()
     return output, time.perf_counter() - start
