@@ -111,13 +111,48 @@ class _GpuProbe:
     except Exception:
       return -1
 
+  def _status_mem(self) -> dict:
+    out = {}
+    try:
+      with open("/proc/self/status") as f:
+        for line in f:
+          if line.startswith(("RssAnon", "RssFile", "RssShmem")):
+            out[line.split(":")[0]] = int(line.split()[1])
+    except OSError:
+      pass
+    return out
+
+  def _mallinfo_kb(self) -> tuple[int, int, int]:
+    # glibc malloc stats: (arena total, in-use bytes, mmap'd-by-malloc bytes), all kB
+    try:
+      import ctypes
+      class MI2(ctypes.Structure):
+        _fields_ = [(n, ctypes.c_size_t) for n in
+                    ("arena", "ordblks", "smblks", "hblks", "hblkhd",
+                     "usmblks", "fsmblks", "uordblks", "fordblks", "keepcost")]
+      libc = ctypes.CDLL("libc.so.6")
+      libc.mallinfo2.restype = MI2
+      mi = libc.mallinfo2()
+      return mi.arena // 1024, mi.uordblks // 1024, mi.hblkhd // 1024
+    except Exception:
+      return -1, -1, -1
+
   def log(self, frame_id: int):
+    import gc
+    import sys
     c = self.c
     net_n = c["alloc_n"] + c["map_n"] - c["free_n"]
     net_b = c["alloc_b"] + c["map_b"] - c["free_b"]
-    line = (f"DMPROBE fid={frame_id} rss={self._rss_kb()}kB lru={self._lru_depth()} "
-            f"alloc={c['alloc_n']}/{c['alloc_b']//1024}kB map={c['map_n']}/{c['map_b']//1024}kB "
-            f"free={c['free_n']}/{c['free_b']//1024}kB net={net_n}buf/{net_b//1024}kB\n")
+    sm = self._status_mem()
+    arena_kb, inuse_kb, cmmap_kb = self._mallinfo_kb()
+    line = (f"DMPROBE fid={frame_id} rss={self._rss_kb()}kB anon={sm.get('RssAnon', -1)}kB "
+            f"file={sm.get('RssFile', -1)}kB shm={sm.get('RssShmem', -1)}kB "
+            f"pyblocks={sys.getallocatedblocks()} heap={arena_kb}/{inuse_kb}kB cmmap={cmmap_kb}kB "
+            f"lru={self._lru_depth()} gpu_net={net_n}buf/{net_b//1024}kB\n")
+    if frame_id % 1200 == 0:
+      import collections
+      counts = collections.Counter(type(o).__name__ for o in gc.get_objects()).most_common(8)
+      line += f"DMTYPES fid={frame_id} " + " ".join(f"{t}={n}" for t, n in counts) + "\n"
     with open("/data/dm_gpu_probe.log", "a") as f:
       f.write(line)
 # --- end TEMP probe ---
