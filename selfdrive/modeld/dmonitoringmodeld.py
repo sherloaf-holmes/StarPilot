@@ -73,6 +73,56 @@ class ModelState:
     return output, time.perf_counter() - start
 
 
+# --- TEMP: native GPU-alloc leak probe (gated on DM_GPU_PROBE), remove after diagnosis ---
+class _GpuProbe:
+  def __init__(self, device_str: str):
+    self.device_str = device_str
+    self.c = {"alloc_n": 0, "alloc_b": 0, "map_n": 0, "map_b": 0, "free_n": 0, "free_b": 0}
+    from tinygrad.runtime.ops_qcom import QCOMDevice
+    self._orig_alloc = QCOMDevice._gpu_alloc
+    self._orig_map = QCOMDevice._gpu_map
+    self._orig_free = QCOMDevice._gpu_free
+    probe = self
+
+    def wrap_alloc(dev, size, *a, **k):
+      buf = probe._orig_alloc(dev, size, *a, **k)
+      probe.c["alloc_n"] += 1; probe.c["alloc_b"] += buf.size
+      return buf
+    def wrap_map(dev, ptr, size, *a, **k):
+      buf = probe._orig_map(dev, ptr, size, *a, **k)
+      probe.c["map_n"] += 1; probe.c["map_b"] += size
+      return buf
+    def wrap_free(dev, mem, *a, **k):
+      probe.c["free_n"] += 1; probe.c["free_b"] += mem.size
+      return probe._orig_free(dev, mem, *a, **k)
+    QCOMDevice._gpu_alloc = wrap_alloc
+    QCOMDevice._gpu_map = wrap_map
+    QCOMDevice._gpu_free = wrap_free
+
+  def _rss_kb(self) -> int:
+    with open("/proc/self/statm") as f:
+      return int(f.read().split()[1]) * (os.sysconf("SC_PAGE_SIZE") // 1024)
+
+  def _lru_depth(self) -> int:
+    try:
+      from tinygrad.device import Device
+      cache = Device[self.device_str].allocator.cache
+      return sum(len(v) for v in cache.values())
+    except Exception:
+      return -1
+
+  def log(self, frame_id: int):
+    c = self.c
+    net_n = c["alloc_n"] + c["map_n"] - c["free_n"]
+    net_b = c["alloc_b"] + c["map_b"] - c["free_b"]
+    line = (f"DMPROBE fid={frame_id} rss={self._rss_kb()}kB lru={self._lru_depth()} "
+            f"alloc={c['alloc_n']}/{c['alloc_b']//1024}kB map={c['map_n']}/{c['map_b']//1024}kB "
+            f"free={c['free_n']}/{c['free_b']//1024}kB net={net_n}buf/{net_b//1024}kB\n")
+    with open("/data/dm_gpu_probe.log", "a") as f:
+      f.write(line)
+# --- end TEMP probe ---
+
+
 def slice_outputs(model_outputs, output_slices):
   return {key: model_outputs[np.newaxis, value] for key, value in output_slices.items()}
 
@@ -145,6 +195,8 @@ def main():
   model = ModelState(vipc_client.width, vipc_client.height)
   cloudlog.warning("models loaded, dmonitoringmodeld starting")
 
+  probe = _GpuProbe(model.device) if os.getenv("DM_GPU_PROBE") else None
+
   sm = SubMaster(["liveCalibration"])
   pm = PubMaster(["driverStateV2"])
   calib = np.zeros(model.numpy_inputs["calib"].size, dtype=np.float32)
@@ -174,6 +226,9 @@ def main():
       "driverStateV2",
       get_driverstate_packet(parsed, vipc_client.frame_id, execution_time, gpu_execution_time),
     )
+
+    if probe is not None and vipc_client.frame_id % 300 == 0:
+      probe.log(vipc_client.frame_id)
 
 
 if __name__ == "__main__":
