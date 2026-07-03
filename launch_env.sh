@@ -6,6 +6,12 @@ export NUMEXPR_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export VECLIB_MAXIMUM_THREADS=1
 
+# Cap glibc per-thread malloc arenas. Default is 8*ncores (~64 on the 8-core SoC),
+# each able to grow to ~64MB, which bloats RSS across our many always-on Python
+# processes. These workloads don't do heavy concurrent malloc (threads are already
+# pinned to 1 above), so a low arena count trims baseline RSS with no perf cost.
+export MALLOC_ARENA_MAX=2
+
 # On AGNOS, prefer the managed venv runtime (has required Python deps like pyzmq).
 if [ -x /usr/local/venv/bin/python3 ]; then
   export PATH="/usr/local/venv/bin:${PATH}"
