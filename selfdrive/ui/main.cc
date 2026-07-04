@@ -110,6 +110,19 @@ const char *signal_name(int sig) {
 }
 
 void crash_handler(int sig, siginfo_t *info, void *uctx_raw) {
+  // A crash caused by heap corruption can make backtrace_symbols_fd() (which
+  // may touch the allocator) re-trigger the same abort chain, re-entering
+  // this handler for a second/third/etc signal and flooding the log with
+  // duplicates of the same event. Only the first entrant does the full,
+  // heap-touching capture; anyone re-entering just re-raises immediately.
+  static volatile sig_atomic_t already_crashing = 0;
+  if (already_crashing) {
+    signal(sig, SIG_DFL);
+    raise(sig);
+    return;
+  }
+  already_crashing = 1;
+
   int fd = open_crash_log();
   if (fd >= 0) {
     write_str(fd, "\n=== UI CRASH sig=");
