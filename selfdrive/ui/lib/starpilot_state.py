@@ -17,6 +17,7 @@ class StarPilotCarState:
     isJeep: bool = False
     isToyota: bool = False
     isSubaru: bool = False
+    isVolvo: bool = False
     isVolt: bool = False
     isBolt: bool = False
     isAngleCar: bool = False
@@ -93,6 +94,7 @@ class StarPilotState:
             self.car_state.isJeep = brand == "chrysler" and fallback_model_str.startswith("JEEP_")
             self.car_state.isSubaru = brand == "subaru"
             self.car_state.isToyota = brand == "toyota"
+            self.car_state.isVolvo = brand == "volvo"
             self.car_state.isHKGCanFd = False
             self.car_state.hasModeStarButtons = False
             self.car_state.isBolt = False
@@ -168,6 +170,7 @@ class StarPilotState:
             self.car_state.isJeep = car_make == "chrysler" and car_fingerprint.startswith("JEEP_")
             self.car_state.isSubaru = car_make == "subaru"
             self.car_state.isToyota = car_make == "toyota"
+            self.car_state.isVolvo = car_make == "volvo"
             self.car_state.isTSK = bool(self._safe_get(CP, "secOcRequired", False))
             self.car_state.isVolt = car_fingerprint.startswith("CHEVROLET_VOLT")
             

@@ -191,6 +191,15 @@ class Car:
       self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.GM_REMAP_CANCEL_TO_DISTANCE
       self.FPCP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.GM_REMAP_CANCEL_TO_DISTANCE
 
+    # Volvo/Polestar-only flags, read exclusively by opendbc/car/volvo (not by panda safety)
+    if self.CP.brand == "volvo":
+      if self.params.get_bool("VolvoDoubleTapCruise"):
+        self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.VOLVO_DOUBLE_TAP_CRUISE
+        self.FPCP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.VOLVO_DOUBLE_TAP_CRUISE
+      if self.params.get_bool("VolvoSpoofPAHandsOnWheel"):
+        self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.VOLVO_SPOOF_PA_HANDS_ON_WHEEL
+        self.FPCP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.VOLVO_SPOOF_PA_HANDS_ON_WHEEL
+
     fpcp_bytes = self.FPCP.to_bytes()
     self.params.put("StarPilotCarParams", fpcp_bytes)
     self.params.put_nonblocking("StarPilotCarParamsPersistent", fpcp_bytes)

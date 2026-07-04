@@ -393,6 +393,20 @@ class VehicleSettingsManagerView(PanelManagerView):
         "set_state": lambda s: self._controller._on_toggle("RemapCancelToDistance"),
       })
 
+    if cs.isVolvo:
+      toggles.append({
+        "title": tr("Double-Tap Cruise Engage"),
+        "subtitle": tr("Engage openpilot only when cruise control is double-tapped (on-off-on)."),
+        "get_state": lambda: self._controller._params.get_bool("VolvoDoubleTapCruise"),
+        "set_state": lambda s: self._controller._on_toggle("VolvoDoubleTapCruise"),
+      })
+      toggles.append({
+        "title": tr("Spoof PA Hands-on-Wheel"),
+        "subtitle": tr("Spoof hands-on-wheel signals while stock Pilot Assist is engaged so PA doesn't nag or disengage."),
+        "get_state": lambda: self._controller._params.get_bool("VolvoSpoofPAHandsOnWheel"),
+        "set_state": lambda s: self._controller._on_toggle("VolvoSpoofPAHandsOnWheel"),
+      })
+
     if cs.isHKGCanFd and cs.hasOpenpilotLongitudinal:
       toggles.append({
         "title": tr("EV Remote Climate"),
