@@ -196,9 +196,6 @@ class Car:
       if self.params.get_bool("VolvoDoubleTapCruise"):
         self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.VOLVO_DOUBLE_TAP_CRUISE
         self.FPCP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.VOLVO_DOUBLE_TAP_CRUISE
-      if self.params.get_bool("VolvoSpoofPAHandsOnWheel"):
-        self.CP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.VOLVO_SPOOF_PA_HANDS_ON_WHEEL
-        self.FPCP.alternativeExperience |= ALTERNATIVE_EXPERIENCE.VOLVO_SPOOF_PA_HANDS_ON_WHEEL
 
     fpcp_bytes = self.FPCP.to_bytes()
     self.params.put("StarPilotCarParams", fpcp_bytes)

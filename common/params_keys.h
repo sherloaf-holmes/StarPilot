@@ -560,7 +560,6 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"SpeedLimitsFiltered", {PERSISTENT | DONT_LOG, JSON, "[]", "[]"}},
     {"SpeedLimitSources", {PERSISTENT, BOOL, "0", "0", 3}},
     {"VolvoDoubleTapCruise", {PERSISTENT, BOOL, "0", "0", 2}},
-    {"VolvoSpoofPAHandsOnWheel", {PERSISTENT, BOOL, "0", "0", 2}},
     {"VisionSpeedLimitAutoBookmark", {PERSISTENT, BOOL, "0", "0", 0}},
     {"VisionSpeedLimitAutoPreserveSegment", {PERSISTENT, BOOL, "0", "0", 0}},
     {"VisionSpeedLimitDetection", {PERSISTENT, BOOL, "0", "0", 0}},

@@ -14,4 +14,3 @@ class ALTERNATIVE_EXPERIENCE:
 
   # Volvo/Polestar-only flags, checked exclusively in opendbc/car/volvo (not in panda safety)
   VOLVO_DOUBLE_TAP_CRUISE = 1024
-  VOLVO_SPOOF_PA_HANDS_ON_WHEEL = 2048

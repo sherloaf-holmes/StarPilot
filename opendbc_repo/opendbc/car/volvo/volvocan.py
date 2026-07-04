@@ -38,7 +38,7 @@ def create_lca_message(packer, lat_active: bool, apply_angle: float, msg_lca: di
 
   return packer.make_can_msg('LCA', 2, values)
 
-def create_pscm_message(packer, lat_active: bool, msg_pscm: dict, frame: int, spoof_pa_hands_on_wheel: bool):
+def create_pscm_message(packer, lat_active: bool, msg_pscm: dict, frame: int):
   values = {
     'PSCM_ANGLE_SENSOR': msg_pscm['PSCM_ANGLE_SENSOR'],
     'BIT_0': msg_pscm['BIT_0'],
@@ -50,10 +50,11 @@ def create_pscm_message(packer, lat_active: bool, msg_pscm: dict, frame: int, sp
     'BYTE_7': msg_pscm['BYTE_7'],
   }
 
-  # Spoof hands on wheel when:
-  # - lat_active (openpilot is steering), OR
-  # - spoof_pa_hands_on_wheel (Pilot Assist is engaged AND toggle enabled)
-  if lat_active or spoof_pa_hands_on_wheel:
+  # Spoof hands on wheel only while openpilot is steering, so the PSCM doesn't nag
+  # or disengage for hands-off (openpilot's own driver monitoring is enforcing here).
+  # When openpilot is not driving we pass the stock values through untouched, so the
+  # car's own hands-on-wheel safety check for stock Pilot Assist stays intact.
+  if lat_active:
     values['HANDS_ON_STEERING_WHEEL_B'] = 186 if frame % 2 == 0 else 154
     values['HANDS_ON_STEERING_WHEEL_A'] = 195 if frame % 2 == 0 else 249
 

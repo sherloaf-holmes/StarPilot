@@ -6,7 +6,6 @@ from opendbc.car.volvo.volvocan import create_lca_message, create_pscm_message, 
                                        create_lca_4_message, create_lca_5_message, create_lca_6_message, create_lca_7_message, \
                                        create_pscm_related_message
 from opendbc.car.volvo.values import CarControllerParams
-from opendbc.safety import ALTERNATIVE_EXPERIENCE
 
 
 class CarController(CarControllerBase):
@@ -59,11 +58,8 @@ class CarController(CarControllerBase):
       can_sends.append(create_lca_message(self.packer, lat_active, apply_angle, CS.msg_lca))
       self.apply_angle_last = apply_angle
 
-      # Check if PA hands-on-wheel spoof toggle is enabled
-      spoof_pa_hands_enabled = bool(self.CP.alternativeExperience & ALTERNATIVE_EXPERIENCE.VOLVO_SPOOF_PA_HANDS_ON_WHEEL)
-      spoof_pa_hands = CS.pilot_assist_engaged and spoof_pa_hands_enabled
       # PSCM (bus 2 -> 0) - 0x16 - 100 Hz
-      can_sends.append(create_pscm_message(self.packer, lat_active, CS.msg_pscm, self.frame, spoof_pa_hands))
+      can_sends.append(create_pscm_message(self.packer, lat_active, CS.msg_pscm, self.frame))
 
       # PSCM_RELATED (bus 2 -> 0) - 0x17 - 100 Hz
       # Initialize counter from CarState on first run
