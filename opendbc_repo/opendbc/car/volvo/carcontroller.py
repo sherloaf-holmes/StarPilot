@@ -93,7 +93,6 @@ class CarController(CarControllerBase):
       apply_angle = apply_std_steer_angle_limits(apply_angle, self.apply_angle_last, CS.out.vEgoRaw,
                                                  CS.out.steeringAngleDeg, lat_active, CarControllerParams.ANGLE_LIMITS)
 
-
       # Update LCA torque-authority envelope (replicates stock Pilot Assist's
       # easy-override and bounce-free release). Stock holds both arms at ±614
       # in steady state; on override the arms collapse to a shifted plateau
