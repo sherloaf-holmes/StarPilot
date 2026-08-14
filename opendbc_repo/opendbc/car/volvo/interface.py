@@ -7,6 +7,7 @@ from opendbc.car.volvo.values import VolvoSPAPlatformConfig, CAR
 TransmissionType = structs.CarParams.TransmissionType
 
 VOLVO_FLAG_SPA = 1
+SAFETY_VOLVO = 36
 
 
 class CarInterface(CarInterfaceBase):
@@ -20,7 +21,7 @@ class CarInterface(CarInterfaceBase):
     safety_param = 0
     if isinstance(CAR(candidate).config, VolvoSPAPlatformConfig):
       safety_param = VOLVO_FLAG_SPA
-    ret.safetyConfigs = [get_safety_config(structs.CarParams.SafetyModel.volvo, safety_param)]
+    ret.safetyConfigs = [get_safety_config(SAFETY_VOLVO, safety_param)]
     #ret.safetyConfigs = [get_safety_config(structs.CarParams.SafetyModel.noOutput)]
 
     ret.dashcamOnly = False

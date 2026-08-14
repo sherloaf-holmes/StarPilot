@@ -24,7 +24,7 @@ import pathlib
 import re
 import unittest
 
-from opendbc.car.structs import CarParams
+from opendbc.car.volvo.interface import SAFETY_VOLVO
 from opendbc.safety.tests.libsafety import libsafety_py
 import opendbc.safety.tests.common as common
 from opendbc.safety.tests.common import CANPackerSafety
@@ -107,7 +107,7 @@ class TestVolvoSafetyBase(common.CarSafetyTest):
     # the mid-bus DBC since most shared messages live there.
     self.packer = self.mid_packer
     self.safety = libsafety_py.libsafety
-    self.safety.set_safety_hooks(CarParams.SafetyModel.volvo, self.SAFETY_PARAM)
+    self.safety.set_safety_hooks(SAFETY_VOLVO, self.SAFETY_PARAM)
     self.safety.init_tests()
 
   # ---- Abstract methods from CarSafetyTest ----

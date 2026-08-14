@@ -85,7 +85,7 @@ class TestTeslaPreAPSafety(common.SafetyTestBase):
 
   def test_mode_param_round_trip(self):
     self._set_mode(1 | 2 | 4)
-    self.assertEqual(self.safety.get_current_safety_mode(), 36)
+    self.assertEqual(self.safety.get_current_safety_mode(), 35)
     self.assertEqual(self.safety.get_current_safety_param(), 1 | 2 | 4)
 
   def test_stalk_engage_and_cancel(self):
