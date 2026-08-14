@@ -15,11 +15,7 @@ class CarState(CarStateBase):
   def __init__(self, CP):
     super().__init__(CP)
     self.is_spa = isinstance(CAR(CP.carFingerprint).config, VolvoSPAPlatformConfig)
-    self.cruise_enabled_prev = False
-    self.cruise_last_disabled_frame = 0
-    self.cruise_double_tap_active = False
     self.gas_pressed_prev = False
-    self.CC_frame = 0 # CarController frame
     self.dispatch_lca_2_msg = False
     self.msg_pscm = {}
     self.msg_lca = {}
@@ -83,7 +79,6 @@ class CarState(CarStateBase):
     # EPS status - placeholder until actual signal is found
     self.eps_active = True  # Assume EPS is active for now
 
-    # cruise - double-tap detection (on-off-on within 500ms/50 frames / 1000ms/100 frames)
     if self.is_spa:
       # SPA: byte 0 bit 1, inverted (0 = cruise on, 1 = cruise off)
       cruise_raw = cp_pt.vl["BUS1_CRUISE_CONTROL"]["CRUISE_CONTROL_SPA_ENABLED"] == 1
@@ -91,26 +86,8 @@ class CarState(CarStateBase):
       # CMA: two separate boolean signals
       cruise_raw = cp_pt.vl["BUS1_CRUISE_CONTROL"]["CRUISE_CONTROL_ENABLED"] == 1 or cp_pt.vl["BUS1_CRUISE_CONTROL"]["CRUISE_CONTROL_ENABLED_IDLE_TRAFFIC"] == 1
 
-    # Check if double-tap cruise feature is enabled (bit 6 of alternativeExperience)
-    use_double_tap = bool(self.CP.alternativeExperience & 64)
-
-    if use_double_tap:
-      # Detect on-off-on double-tap pattern
-      if cruise_raw and not self.cruise_enabled_prev:
-        # Just turned ON - check if we turned OFF recently (within 100 frames = 1000ms)
-        if self.CC_frame - self.cruise_last_disabled_frame <= 100:
-          self.cruise_double_tap_active = True
-      elif not cruise_raw and self.cruise_enabled_prev:
-        # Just turned OFF - clear the double-tap flag
-        self.cruise_last_disabled_frame = self.CC_frame
-        self.cruise_double_tap_active = False
-
-    # cruiseState.enabled always reflects raw car state (must match panda safety)
-    # blockPcmEnable prevents openpilot engagement until double-tap detected
     ret.cruiseState.enabled = cruise_raw
-    ret.blockPcmEnable = use_double_tap and not self.cruise_double_tap_active
 
-    self.cruise_enabled_prev = cruise_raw
     self.gas_pressed_prev = ret.gasPressed
     ret.cruiseState.available = True  # TODO: Determine actual availability
     ret.cruiseState.speed = 0  # TODO: Find cruise set speed (not required for lateral control)

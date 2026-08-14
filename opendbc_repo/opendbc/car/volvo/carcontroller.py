@@ -62,7 +62,6 @@ class CarController(CarControllerBase):
     self.lca_auth_drv_mag_filt = 0.0
 
   def update(self, CC, CS, now_nanos):
-    CS.CC_frame = self.frame
     can_sends = []
     actuators = CC.actuators
 
@@ -193,11 +192,8 @@ class CarController(CarControllerBase):
                                           authority_neg=int(round(self.lca_auth_neg))))
       self.apply_angle_last = apply_angle
 
-      # Check if PA hands-on-wheel spoof toggle is enabled (bit 7 of alternativeExperience)
-      spoof_pa_hands_enabled = bool(self.CP.alternativeExperience & 128)
-      spoof_pa_hands = CS.pilot_assist_engaged and spoof_pa_hands_enabled
       # PSCM (bus 2 -> 0) - 0x16 - 100 Hz
-      can_sends.append(create_pscm_message(self.packer, lat_active, CS.msg_pscm, self.frame, spoof_pa_hands))
+      can_sends.append(create_pscm_message(self.packer, lat_active, CS.msg_pscm, self.frame))
       # EGSM - 0x45 - 100 Hz
       #can_sends.append(create_egsm_message(self.packer, CS.msg_egsm))
 
