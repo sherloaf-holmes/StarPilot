@@ -61,7 +61,7 @@ class CarController(CarControllerBase):
     # via YIELD_SLOPE) into envelope ripple felt at the wheel.
     self.lca_auth_drv_mag_filt = 0.0
 
-  def update(self, CC, CS, now_nanos):
+  def update(self, CC, CS, now_nanos, starpilot_toggles):
     can_sends = []
     actuators = CC.actuators
 

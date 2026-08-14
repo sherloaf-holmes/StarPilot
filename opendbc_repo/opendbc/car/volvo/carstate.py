@@ -1,3 +1,4 @@
+from cereal import custom
 from opendbc.car import structs, Bus
 from opendbc.can.parser import CANParser
 from opendbc.car.volvo.values import DBC, VolvoSPAPlatformConfig, CAR
@@ -12,8 +13,8 @@ SPEED_TO_MS = 0.003977
 
 
 class CarState(CarStateBase):
-  def __init__(self, CP):
-    super().__init__(CP)
+  def __init__(self, CP, FPCP):
+    super().__init__(CP, FPCP)
     self.is_spa = isinstance(CAR(CP.carFingerprint).config, VolvoSPAPlatformConfig)
     self.gas_pressed_prev = False
     self.dispatch_lca_2_msg = False
@@ -33,7 +34,7 @@ class CarState(CarStateBase):
     self.msg_lca_6 = {}
     self.msg_lca_7 = {}
 
-  def update(self, can_parsers) -> structs.CarState:
+  def update(self, can_parsers, starpilot_toggles) -> structs.CarState:
     cp_main = can_parsers[Bus.main]
     cp_pt = can_parsers[Bus.pt]
     cp_party = can_parsers[Bus.party]
@@ -131,7 +132,9 @@ class CarState(CarStateBase):
     self.msg_pscm_related = cp_party.vl['PSCM_RELATED']
 
     self.pilot_assist_engaged = cp_main.vl['LCA_2']['PILOT_ASSIST_ENGAGED'] == 1
-    return ret
+
+    fp_ret = custom.StarPilotCarState.new_message()
+    return ret, fp_ret
 
   @staticmethod
   def get_can_parsers(CP):
