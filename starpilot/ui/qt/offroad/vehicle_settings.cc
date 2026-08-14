@@ -34,7 +34,9 @@ QStringList getCarNames(const QString &carMake, QMap<QString, QString> &carModel
     {"subaru", "subaru"},
     {"tesla", "tesla"},
     {"toyota", "toyota"},
-    {"volkswagen", "volkswagen"}
+    {"volkswagen", "volkswagen"},
+    {"volvo", "volvo"},
+    {"polestar", "volvo"}
   };
 
   QStringList carNames;
@@ -107,7 +109,8 @@ StarPilotVehiclesPanel::StarPilotVehiclesPanel(StarPilotSettingsWindow *parent, 
     "Acura", "Audi", "Buick", "Cadillac", "Chevrolet", "Chrysler", "CUPRA",
     "Dodge", "Ford", "Genesis", "GMC", "Holden", "Honda", "Hyundai", "Jeep",
     "Kia", "Lexus", "Lincoln", "MAN", "Mazda", "Nissan", "Peugeot", "Ram",
-    "Rivian", "SEAT", "Škoda", "Subaru", "Tesla", "Toyota", "Volkswagen"
+    "Rivian", "SEAT", "Škoda", "Subaru", "Tesla", "Toyota", "Volkswagen",
+    "Volvo", "Polestar"
   };
 
   ButtonControl *selectMakeButton = new ButtonControl(tr("Car Make"), tr("SELECT"));
