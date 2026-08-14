@@ -998,6 +998,10 @@ class SafetyTest(SafetyTestBase):
             volkswagen_shared = ('TestVolkswagenMqb', 'TestVolkswagenMlb')
             if attr.startswith(volkswagen_shared) and current_test.startswith(volkswagen_shared):
               continue
+            # Volvo CMA and SPA share the same TX_MSGS list (static in volvo_init);
+            # safetyParam only switches RX checks and gas/speed scaling, not TX.
+            if attr.startswith('TestVolvo') and current_test.startswith('TestVolvo'):
+              continue
 
             # overlapping TX addrs, but they're not actuating messages for either car
             if attr == 'TestHyundaiCanfdLKASteeringLongEV' and current_test.startswith('TestToyota'):
