@@ -2,7 +2,8 @@
 
 #include "opendbc/safety/declarations.h"
 
-// safetyParam: 0 = CMA (XC40 Recharge), 1 = SPA (S60 Recharge, Polestar 2) TODO - check this - PS2 is CMA I think
+// safetyParam: 0 = CMA (XC40 Recharge), 1 = SPA (S60 Recharge, Polestar 2)
+// Polestar 2 is technically CMA, but appears to use SPA DBC for CAN 1 bus
 #define VOLVO_FLAG_SPA 1U
 
 // Volvo CAN message addresses shared between CMA and SPA
